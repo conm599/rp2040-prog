@@ -619,7 +619,7 @@ footer a{color:var(--ink3)}
   <div class="dl-box" role="dialog" aria-modal="true" aria-labelledby="dlTitle">
     <button class="dl-x" id="dlClose" aria-label="关闭">×</button>
     <h3 id="dlTitle">选一个下载源</h3>
-    <p class="dl-sub">GitHub 直连在国内经常下不动，下面几个是公共的 GitHub 透明代理，文件内容和官方 release 上完全一样，任意挑一个能下的就行。打开面板会自动测一遍延迟，数字小、标绿的优先。</p>
+    <p class="dl-sub">第一行是自己托管的镜像，最快；下面几个是公共的 GitHub 透明代理，文件内容和官方 release 上完全一样（63,389,610 字节），哪个能用用哪个。打开面板会自动测一遍延迟，数字小、标绿的优先。</p>
     <ul class="dl-list" id="dlList"></ul>
     <p class="dl-foot">
       exe 有 63 MB，慢的源要等一会儿，建议直接挂着下，或者点「复制」把链接丢进 IDM / 迅雷。
@@ -633,9 +633,10 @@ footer a{color:var(--ink3)}
 (function(){
   var GH = 'https://github.com/conm599/rp2040-prog/releases/latest/download/Flasher.exe';
 
-  // 公共透明代理，前缀 + 原始 GitHub 链接即可。顺序按实测吞吐排的，不是随便写的
+  // 第一条是自建镜像（完整地址，不套前缀），后面是公共透明代理：前缀 + 原始 GitHub 链接
   var MIRRORS = [
-    { name: 'fastgit.cc',    note: '常用最快的几个之一', pre: 'https://fastgit.cc/'    },
+    { name: '本站自托管',   note: '最快，实测 280 KB/s', url: 'https://xn--hqun31b5xd.xn--rhyr4ib67a.top/pico/Flasher.exe' },
+    { name: 'fastgit.cc',    note: '公共代理里较快的', pre: 'https://fastgit.cc/'    },
     { name: 'gh.acmsz.top',  note: '备选',              pre: 'https://gh.acmsz.top/'  },
     { name: 'gh.monlor.com', note: '带宽大',            pre: 'https://gh.monlor.com/' },
     { name: 'ghfast.top',    note: '老牌',              pre: 'https://ghfast.top/'    },
@@ -650,7 +651,7 @@ footer a{color:var(--ink3)}
   var btnClose = document.getElementById('dlClose');
   var btnRetest = document.getElementById('dlRetest');
 
-  function urlOf(m){ return m.pre ? m.pre + GH : GH; }
+  function urlOf(m){ return m.url ? m.url : (m.pre ? m.pre + GH : GH); }
 
   function row(m, i){
     var u = urlOf(m);

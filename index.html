@@ -311,7 +311,7 @@ footer a{color:var(--ink3)}
       <ul class="specs">
         <li><span class="k">通道</span><span class="v">SWD（pyOCD + debugprobe，不用动 BOOT0）／ 串口 ISP（BOOT0=1）</span></li>
         <li><span class="k">源码</span><span class="v">拖 .c / .h 直接编译，多文件工程和整个文件夹都能整批拖</span></li>
-        <li><span class="k">大小</span><span class="v">63 MB 单文件 exe，首次启动解压工具链约 5 秒</span></li>
+        <li><span class="k">大小</span><span class="v">63 MB 单文件 exe；首次启动要解压内置工具链，会慢一点</span></li>
       </ul>
       <div class="actions">
         <button class="btn" id="dlOpen">下载 exe <span class="sz">63 MB</span></button>
@@ -619,11 +619,11 @@ footer a{color:var(--ink3)}
   <div class="dl-box" role="dialog" aria-modal="true" aria-labelledby="dlTitle">
     <button class="dl-x" id="dlClose" aria-label="关闭">×</button>
     <h3 id="dlTitle">选一个下载源</h3>
-    <p class="dl-sub">第一行是自己托管的镜像，最快；下面几个是公共的 GitHub 透明代理，文件内容和官方 release 上完全一样（63,389,610 字节），哪个能用用哪个。打开面板会自动测一遍延迟，数字小、标绿的优先。</p>
+    <p class="dl-sub">第一行是自建镜像，后面是公共 GitHub 透明代理，最后是官方源。文件都是同一个 release 资产（63,389,610 字节）。哪条快取决于你当时的网络和线路，面板会现场测延迟，标绿的只是这一次测得比较快——下不完就换个源重试。</p>
     <ul class="dl-list" id="dlList"></ul>
     <p class="dl-foot">
-      exe 有 63 MB，慢的源要等一会儿，建议直接挂着下，或者点「复制」把链接丢进 IDM / 迅雷。
-      代理是第三方公益服务，随时可能失效，一个不行就换下一个。
+      exe 有 63 MB，下载时长看你自己的网络；挂着下也行，或者点「复制」把链接丢进 IDM / 迅雷。
+      公共代理是第三方公益服务，随时可能失效，慢或失败就换下一个。
       <button id="dlRetest">重新测速</button>
     </p>
   </div>
@@ -634,15 +634,16 @@ footer a{color:var(--ink3)}
   var GH = 'https://github.com/conm599/rp2040-prog/releases/latest/download/Flasher.exe';
 
   // 第一条是自建镜像（完整地址，不套前缀），后面是公共透明代理：前缀 + 原始 GitHub 链接
+  // 不写任何速度结论——同一条源在不同网络、不同时段差别很大，交给使用者现场测
   var MIRRORS = [
-    { name: '本站自托管',   note: '最快，实测 280 KB/s', url: 'https://xn--hqun31b5xd.xn--rhyr4ib67a.top/pico/Flasher.exe' },
-    { name: 'fastgit.cc',    note: '公共代理里较快的', pre: 'https://fastgit.cc/'    },
-    { name: 'gh.acmsz.top',  note: '备选',              pre: 'https://gh.acmsz.top/'  },
-    { name: 'gh.monlor.com', note: '带宽大',            pre: 'https://gh.monlor.com/' },
-    { name: 'ghfast.top',    note: '老牌',              pre: 'https://ghfast.top/'    },
-    { name: 'gh-proxy.com',  note: '稳，多线路',        pre: 'https://gh-proxy.com/'  },
-    { name: 'ghproxy.net',   note: '备用，可能偏慢',    pre: 'https://ghproxy.net/'   },
-    { name: 'GitHub 直连',   note: '原速，国内常只有几 KB/s', pre: ''                   }
+    { name: '自建镜像',      note: '个人服务器', url: 'https://xn--hqun31b5xd.xn--rhyr4ib67a.top/pico/Flasher.exe' },
+    { name: 'fastgit.cc',    note: '公共代理', pre: 'https://fastgit.cc/'    },
+    { name: 'gh.acmsz.top',  note: '公共代理', pre: 'https://gh.acmsz.top/'  },
+    { name: 'gh.monlor.com', note: '公共代理', pre: 'https://gh.monlor.com/' },
+    { name: 'ghfast.top',    note: '公共代理', pre: 'https://ghfast.top/'    },
+    { name: 'gh-proxy.com',  note: '公共代理', pre: 'https://gh-proxy.com/'  },
+    { name: 'ghproxy.net',   note: '公共代理', pre: 'https://ghproxy.net/'   },
+    { name: 'GitHub 直连',   note: '官方源',   pre: ''                       }
   ];
 
   var mask = document.getElementById('dlMask');

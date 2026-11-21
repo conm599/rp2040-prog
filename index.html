@@ -122,7 +122,7 @@ footer a{color:var(--ink3)}
     <div class="stat"><b>8</b><span>可直接下载的固件</span></div>
     <div class="stat"><b>6</b><span>覆盖的调试协议</span></div>
     <div class="stat"><b>10</b><span>开源工具链仓库</span></div>
-    <div class="stat"><b>1</b><span>AI 技能包</span></div>
+    <div class="stat"><b>1</b><span>Agent Skill 包</span></div>
   </div>
 </header>
 
@@ -257,12 +257,12 @@ footer a{color:var(--ink3)}
     </div>
 
     <div class="card">
-      <h3>AI 技能包<span class="ver">Skill</span></h3>
-      <p class="desc">把这一整套东西固化成 AI 能直接读的上下文：八个固件的用途与 VID:PID、SWD 接线铁律、STM32 兼容片 128KB / 1KB 页的烧录参数、串口 ISP 的四个必错点。装进 WorkBuddy 之后，新开对话不用再从头解释这是什么。</p>
+      <h3>Agent Skill 包<span class="ver">mcu-probe-toolkit</span></h3>
+      <p class="desc">把这一整套东西固化成 AI 能直接读的上下文：八个固件的用途与 VID:PID、SWD 接线铁律、STM32 兼容片 128KB / 1KB 页的烧录参数、串口 ISP 的四个必错点。装好后新开对话不用再从头解释这是什么。</p>
       <div class="tags"><span class="tag t-swd">Skill</span><span class="tag t-neutral">pyOCD</span><span class="tag t-jtag">排错表</span><span class="tag t-spi">脚本</span></div>
       <ul class="specs">
         <li><span class="k">内容</span><span class="v">SKILL.md + 3 份参考 + 3 个脚本（探测 / 烧录 / 生成闪灯固件）</span></li>
-        <li><span class="k">安装</span><span class="v">解压到 ~/.workbuddy/skills/ 目录</span></li>
+        <li><span class="k">安装</span><span class="v">解压到客户端的 skills 目录（见下方说明）</span></li>
         <li><span class="k">大小</span><span class="v">15 KB</span></li>
       </ul>
       <div class="actions">
@@ -505,10 +505,12 @@ footer a{color:var(--ink3)}
 </section>
 
 <section id="skill">
-  <h2><span class="n">06</span>AI 技能包</h2>
+  <h2><span class="n">06</span>Agent Skill 包</h2>
   <p class="sub">
-    这一页的知识点如果每次对话都要重讲一遍，很烦。所以打包成了一个 WorkBuddy Skill：
-    新开对话时 AI 会自动加载，直接知道「这块板子是什么、烧哪个固件、接线怎么接、烧失败了怎么查」。
+    这一页的知识点如果每次对话都要重讲一遍，很烦。所以打包成了一个 <b>Agent Skill</b>——
+    就是 Anthropic 那套 <code style="font-family:var(--mono);font-size:12.5px">SKILL.md</code> 规范，
+    不是某个客户端专有的东西，Claude Code、WorkBuddy 这类支持该格式的工具都能直接读。
+    装好之后新开对话，AI 就知道「这块板子是什么、烧哪个固件、接线怎么接、烧失败了怎么查」。
   </p>
 
   <div class="card" style="margin-bottom:18px">
@@ -533,11 +535,16 @@ footer a{color:var(--ink3)}
 
   <div class="note" style="border-left-color:var(--blue);background:var(--blue-bg);color:#0c447c">
     <strong style="color:var(--blue)">安装方式</strong><br>
-    解压后把 <code style="font-family:var(--mono);font-size:12.5px">mcu-probe-toolkit</code> 整个文件夹放进
-    <code style="font-family:var(--mono);font-size:12.5px">~/.workbuddy/skills/</code>
-    （Windows 是 <code style="font-family:var(--mono);font-size:12.5px">C:\Users\&lt;用户名&gt;\.workbuddy\skills\</code>），
-    重开对话即生效。目录结构必须是 <code style="font-family:var(--mono);font-size:12.5px">skills/mcu-probe-toolkit/SKILL.md</code>，
-    不要多套一层文件夹。
+    解压后把 <code style="font-family:var(--mono);font-size:12.5px">mcu-probe-toolkit</code>
+    整个文件夹放进客户端的 skills 目录，重开对话即生效。各客户端的目录不同：
+    <table style="margin-top:10px">
+      <tr><th style="width:38%">客户端</th><th>skills 目录</th></tr>
+      <tr><td class="name">WorkBuddy</td><td><code style="font-family:var(--mono);font-size:12px">~/.workbuddy/skills/</code></td></tr>
+      <tr><td class="name">Claude Code</td><td><code style="font-family:var(--mono);font-size:12px">~/.claude/skills/</code></td></tr>
+      <tr><td class="name">项目内（任意客户端）</td><td><code style="font-family:var(--mono);font-size:12px">&lt;项目&gt;/.workbuddy/skills/</code> 或 <code style="font-family:var(--mono);font-size:12px">&lt;项目&gt;/.claude/skills/</code></td></tr>
+    </table>
+    目录结构必须是 <code style="font-family:var(--mono);font-size:12.5px">skills/mcu-probe-toolkit/SKILL.md</code>，
+    不要多套一层文件夹——多套一层就识别不到。
   </div>
 
   <div class="note">

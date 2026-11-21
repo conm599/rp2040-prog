@@ -29,9 +29,48 @@ firmware/*.uf2      8 个固件
 fixpro/             FiXPro 网页烧录界面（已汉化，含原版 index.en.html）
 fixpro/translate_fixpro.py  汉化脚本
 skill/mcu-probe-toolkit.zip Agent Skill 包（SKILL.md 规范），解压到客户端的 skills 目录
+flasher/            桌面烧录器源码（Python，见下）
 ```
 
 纯静态，无构建步骤。`fixpro/` 里的界面用浏览器 Web Serial 直连串口，必须 Chrome / Edge / Opera。
+
+## Flasher：配套的桌面烧录器
+
+`flasher/` 是那个 Windows 烧录器的完整源码：一个本地 HTTP 服务 + 浏览器界面，只用标准库，烧录时才调 pyOCD。
+
+```
+flasher/launcher.py        本地 HTTP 服务（标准库）+ 烧录编排 + 编译调用
+flasher/ui.html            拖拽界面，400ms 轮询日志
+flasher/serial_isp.py      STM32 bootloader（AN3155）最小编程器，串口通道用
+flasher/src/startup.c      最小启动文件（向量表 + 复位处理），用户没带启动文件时用它
+flasher/src/f103.ld        链接脚本，128KB Flash / 20KB RAM
+flasher/examples/blink.c   能直接烧的样例
+flasher/make_toolchain.py  从完整 xpack 裁出打包用的精简工具链
+flasher/Flasher.spec       PyInstaller 打包配置
+```
+
+设计上有几处不太常规的地方，改之前值得先看一眼：
+
+- **不用 tkinter 拖拽**：界面是浏览器，文件以原始字节 POST 给本地服务，避免各平台拖拽实现的差异，也顺带能显示富文本日志。
+- **自定义 pyOCD target**：目标板是 128KB Flash / 1KB 页的兼容片，直接用内置的 F103RC（2KB 页）会在末尾校验失败，所以注册了 `STM32F103CB`。
+- **擦写前必须 `reset_and_halt()`**：否则 FPEC 拒绝解锁，erase 静默无效，表现为"擦除完成但写不进去"。
+- **打包后探针枚举为空**：onefile 环境下 pyOCD 扫不到插件、libusb DLL 定位失败，`launcher.py` 里有三处补丁（`ensure_probe_registered` / `patch_libusb` / 排除 `cmsis_pack_manager`）。
+
+从源码跑（需要 Python 3.10+）：
+
+```bash
+pip install pyocd pyserial
+cd flasher && python launcher.py
+```
+
+要打包成单文件 exe：
+
+```bash
+python make_toolchain.py          # 从完整 xpack 工具链裁出 tc_min/，约 100MB
+pyinstaller Flasher.spec --noconfirm --distpath dist
+```
+
+预编译的 exe 在 [Releases](https://github.com/conm599/rp2040-prog/releases) 里，国内直连 GitHub 慢的话网页上有几个镜像源可选。
 
 ## Agent Skill 包
 

@@ -2,3 +2,13 @@
 _strings_*.txt
 *.bak
 .DS_Store
+
+# Flasher：只提交源码，构建产物和工具链不进仓库
+flasher/tc_min/
+flasher/dist/
+flasher/build_tmp/
+flasher/uploads/
+flasher/_MEI*/
+flasher/__pycache__/
+flasher/*.pyc
+flasher/*.log

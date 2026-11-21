@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>debugprobe 一键烧录器</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#fff; --line:#e3e6ec; --text:#171a20; --sub:#6a7180;
+    --blue:#2563eb; --blue-bg:#eef3fe; --green:#0f7b4f; --green-bg:#e9f7f0;
+    --red:#b42318; --red-bg:#fdecea; --amber:#8a5300; --amber-bg:#fdf4e3;
+    --mono:ui-monospace,"Cascadia Mono","JetBrains Mono",Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font:15px/1.6 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+  .wrap{max-width:900px;margin:0 auto;padding:32px 20px 64px}
+  header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:22px}
+  h1{font-size:22px;margin:0 0 4px;letter-spacing:-.2px}
+  .lede{margin:0;color:var(--sub);font-size:13.5px}
+  .badge{display:inline-flex;align-items:center;gap:7px;padding:7px 13px;border-radius:999px;
+    font-size:12.5px;font-weight:600;white-space:nowrap;border:1px solid transparent}
+  .badge .dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+  .b-ok{background:var(--green-bg);color:var(--green);border-color:#cdeade}
+  .b-bad{background:var(--red-bg);color:var(--red);border-color:#f8d6d2}
+  .b-wait{background:var(--amber-bg);color:var(--amber);border-color:#f3e2c4}
+
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+  .panel h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--sub);
+    margin:0 0 12px;font-weight:700}
+
+  #drop{border:2px dashed #ccd2dd;border-radius:14px;background:#fbfcfe;padding:38px 20px;
+    text-align:center;cursor:pointer;transition:.15s}
+  #drop:hover{border-color:var(--blue);background:var(--blue-bg)}
+  #drop.over{border-color:var(--blue);background:var(--blue-bg);transform:scale(1.005)}
+  #drop .big{font-size:16px;font-weight:600;margin-bottom:6px}
+  #drop .hint{color:var(--sub);font-size:13px}
+  #drop .exts{margin-top:12px;font-family:var(--mono);font-size:12px;color:#8b93a3}
+
+  ul.files{list-style:none;margin:0;padding:0}
+  ul.files li{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--line);
+    border-radius:10px;margin-bottom:8px;background:#fcfdff}
+  ul.files .nm{flex:1;font-family:var(--mono);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  ul.files .sz{color:var(--sub);font-size:12px;font-variant-numeric:tabular-nums}
+  .pill{font-size:11px;padding:2px 8px;border-radius:999px;font-weight:600}
+  .p-fw{background:var(--blue-bg);color:var(--blue)}
+  .p-src{background:var(--amber-bg);color:var(--amber)}
+  .p-hdr{background:#eef0f4;color:#5c6474}
+  .x{cursor:pointer;color:#98a0b0;border:0;background:none;font-size:16px;line-height:1;padding:2px 4px}
+  .x:hover{color:var(--red)}
+
+  .row{display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin:4px 0 16px}
+  label.chk{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;color:#3a4150;cursor:pointer}
+  input[type=checkbox]{width:16px;height:16px;accent-color:var(--blue)}
+
+  .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);
+    background:#fff;padding:10px 18px;font-weight:600;font-size:14px;color:var(--text);transition:.12s}
+  button:hover{border-color:#c2c9d6;background:#f9fafc}
+  button.primary{background:var(--blue);border-color:var(--blue);color:#fff;padding:12px 26px}
+  button.primary:hover{background:#1d4fd8}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .spacer{flex:1}
+
+  .kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .kv div{background:#fafbfd;border:1px solid #eceff4;border-radius:10px;padding:10px 12px}
+  .kv .k{font-size:11px;color:var(--sub);letter-spacing:.04em;text-transform:uppercase;font-weight:600}
+  .kv .v{font-family:var(--mono);font-size:13.5px;margin-top:2px}
+
+  #log{background:#12161d;color:#d5dbe5;border-radius:12px;padding:14px 16px;
+    font-family:var(--mono);font-size:12.5px;line-height:1.75;height:260px;overflow:auto;white-space:pre-wrap;
+    word-break:break-all}
+  #log .ok{color:#6ee7a8}
+  #log .err{color:#ff8b7e}
+  #log .dim{color:#7b8698}
+
+  .fb{margin-top:10px;font-size:13px;padding:10px 13px;border-radius:10px;display:none}
+  .fb.show{display:block}
+  .fb.ok{background:var(--green-bg);color:var(--green)}
+  .fb.err{background:var(--red-bg);color:var(--red)}
+  .fb.run{background:var(--blue-bg);color:var(--blue)}
+  code{font-family:var(--mono);font-size:12.5px;background:#eef1f6;padding:1px 5px;border-radius:5px}
+
+  .seg{display:inline-flex;background:#eef1f6;border-radius:10px;padding:3px;gap:2px}
+  .seg button{border:0;background:transparent;padding:8px 16px;border-radius:8px;
+    font-size:13.5px;font-weight:600;color:var(--sub)}
+  .seg button.on{background:#fff;color:var(--text);box-shadow:0 1px 3px rgba(16,24,40,.12)}
+  .seg button:hover{background:transparent}
+  .seg button.on:hover{background:#fff}
+  .hint2{margin:0;color:var(--sub);font-size:13px}
+  select{font:inherit;font-size:13.5px;padding:8px 10px;border-radius:9px;border:1px solid var(--line);
+    background:#fff;color:var(--text);min-width:180px}
+  .note-warn{margin-top:12px;background:var(--amber-bg);color:var(--amber);border-left:3px solid var(--amber);
+    border-radius:8px;padding:10px 13px;font-size:13px;line-height:1.65}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div>
+    <h1>debugprobe 一键烧录器</h1>
+    <p class="lede">把固件或源码拖进窗口，自动编译、擦除、写入、校验、复位运行。</p>
+  </div>
+  <span id="badge" class="badge b-wait"><span class="dot"></span>检查探针…</span>
+</header>
+
+<div class="panel">
+  <h2>芯片</h2>
+  <div class="kv" id="chip">
+    <div><div class="k">状态</div><div class="v" id="c-state">—</div></div>
+    <div><div class="k">DPIDR</div><div class="v" id="c-dpidr">—</div></div>
+    <div><div class="k">Flash</div><div class="v" id="c-flash">—</div></div>
+    <div><div class="k">UID</div><div class="v" id="c-uid">—</div></div>
+  </div>
+  <div class="row" style="margin:14px 0 0">
+    <button id="reprobe">重新探测</button>
+    <button id="diag">自检</button>
+    <span class="spacer"></span>
+    <span class="sz" id="env" style="color:var(--sub);font-size:12px"></span>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>通道</h2>
+  <div class="seg" id="seg">
+    <button data-ch="swd" class="on">SWD（调试器）</button>
+    <button data-ch="serial">串口 ISP（备用）</button>
+  </div>
+
+  <div id="swd-box" style="margin-top:14px">
+    <p class="hint2">走 RP2040 的 SWD，不需要管 BOOT0，速度最快，还能校验。</p>
+  </div>
+
+  <div id="serial-box" style="margin-top:14px;display:none">
+    <div class="row" style="margin:0 0 10px">
+      <label style="font-size:13.5px">串口</label>
+      <select id="port"><option value="">— 点右边刷新 —</option></select>
+      <button id="reload-ports" style="padding:7px 14px">刷新</button>
+      <span class="spacer"></span>
+      <label style="font-size:13.5px">波特率</label>
+      <select id="baud">
+        <option>115200</option><option>57600</option><option>38400</option><option>9600</option>
+      </select>
+    </div>
+    <div class="note-warn">
+      <b>用这条通道要满足三件事：</b>BOOT0 拨到 <b>1</b> 并复位过；串口模块的 <b>TX → PA10</b>、<b>RX → PA9</b>（交叉）；共地。
+      烧完把 BOOT0 拨回 <b>0</b> 再复位。它只能烧写，不能调试，也不做远程复位，所以时序要自己卡。
+    </div>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>拖入文件</h2>
+  <div id="drop">
+    <div class="big">把文件或整个文件夹拖到这里，或点击选择</div>
+    <div class="hint">固件直接烧，源码（含 .h）先编译再烧；多文件工程一次全拖进来</div>
+    <div class="exts">.hex　.bin　.elf　.uf2　|　.c　.cpp　.s　.h</div>
+  </div>
+  <input type="file" id="picker" multiple hidden>
+  <input type="file" id="picker-dir" webkitdirectory directory hidden>
+  <div style="margin-top:8px"><button id="pickdir">选整个文件夹</button></div>
+
+  <div id="queue" style="margin-top:16px"></div>
+
+  <div class="row" style="margin-top:6px">
+    <label class="chk"><input type="checkbox" id="opt-erase" checked>全片擦除</label>
+    <label class="chk"><input type="checkbox" id="opt-verify" checked>回读校验</label>
+    <label class="chk"><input type="checkbox" id="opt-reset" checked>完成后复位运行</label>
+  </div>
+
+  <div class="actions">
+    <button class="primary" id="go">开始烧录</button>
+    <button id="clear">清空队列</button>
+    <div class="spacer"></div>
+    <span style="color:var(--sub);font-size:12.5px" id="tip">还没选文件</span>
+  </div>
+  <div class="fb" id="fb"></div>
+</div>
+
+<div class="panel">
+  <h2>日志</h2>
+  <div id="log"><span class="dim">等待操作…</span></div>
+</div>
+
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const state = { files: [], logFrom: 0, busy: false };
+
+async function jget(u){ const r = await fetch(u); return r.json(); }
+async function jpost(u, body){
+  const r = await fetch(u, {method:'POST', headers:{'Content-Type':'application/json'},
+                            body: JSON.stringify(body||{})});
+  return r.json();
+}
+
+/* ---------- 探针 ---------- */
+async function probe(){
+  const b = $('#badge');
+  b.className = 'badge b-wait'; b.innerHTML = '<span class="dot"></span>检查探针…';
+  $('#c-state').textContent = '…';
+  try{
+    const d = await jget('/api/probe');
+    if(d.connected){
+      b.className = 'badge b-ok';
+      b.innerHTML = '<span class="dot"></span>已连接';
+      $('#c-state').textContent = d.dpidr_ok ? 'HALTED · 链路正常' : '链路异常';
+      $('#c-dpidr').textContent = d.dpidr;
+      $('#c-flash').textContent = (d.flash_kb ?? '?') + ' KB';
+      $('#c-uid').textContent = d.uid;
+    } else {
+      b.className = 'badge b-bad';
+      b.innerHTML = '<span class="dot"></span>未连接';
+      $('#c-state').textContent = '未连接';
+      $('#c-dpidr').textContent = '—';
+      $('#c-flash').textContent = '—';
+      $('#c-uid').textContent = '—';
+      if(d.error) setfb('err', d.error + '。若探针确实插着，点「重新探测」旁的下方链接看自检信息。');
+    }
+  }catch(e){
+    b.className = 'badge b-bad'; b.innerHTML = '<span class="dot"></span>服务异常';
+  }
+}
+
+async function env(){
+  try{
+    const d = await jget('/api/info');
+    const tc = d.gcc ? ((d.gcc.indexOf('_MEI') >= 0) ? '内置工具链就绪' : '工具链就绪') : '无 arm-gcc：源码编译不可用，固件文件照常可烧';
+    $('#env').textContent = tc +
+      (d.rp2040_drive ? ' · RPI-RP2 已挂载' : ' · 无 RPI-RP2 盘');
+  }catch(e){}
+}
+
+/* ---------- 队列 ---------- */
+function fmt(n){ return n < 1024 ? n + ' B' : (n/1024).toFixed(1) + ' KB'; }
+
+const KIND_LABEL = {
+  source: ['p-src', '源码'],
+  header: ['p-hdr', '头文件'],
+  linker: ['p-hdr', '链接脚本'],
+  firmware: ['p-fw', '固件'],
+};
+
+function render(){
+  const q = $('#queue');
+  if(!state.files.length){
+    q.innerHTML = '';
+    $('#tip').textContent = '还没选文件';
+    return;
+  }
+  q.innerHTML = '<ul class="files">' + state.files.map((f,i)=>{
+    const [cls, label] = KIND_LABEL[f.kind] || KIND_LABEL.firmware;
+    return `
+    <li>
+      <span class="pill ${cls}">${label}</span>
+      <span class="nm">${f.name}</span>
+      <span class="sz">${fmt(f.size)}</span>
+      <button class="x" data-i="${i}" title="移除">×</button>
+    </li>`;
+  }).join('') + '</ul>';
+  const c = { source: 0, header: 0, firmware: 0 };
+  state.files.forEach(f => c[f.kind] = (c[f.kind] || 0) + 1);
+  $('#tip').textContent = `队列：${state.files.length} 个文件` +
+    (c.source ? `（${c.source} 源文件${c.header ? ' + ' + c.header + ' 头文件' : ''}）` : '');
+  q.querySelectorAll('.x').forEach(el=>{
+    el.onclick = async () => {
+      await jpost('/api/remove', {index: +el.dataset.i});
+      await refreshFiles();
+    };
+  });
+}
+
+async function refreshFiles(){
+  const d = await jget('/api/files');
+  state.files = d.files; state.busy = d.busy;
+  render();
+  $('#go').disabled = d.busy || !state.files.length;
+}
+
+async function upload(file, relName){
+  const name = relName || file.name;
+  // 浏览器偶尔会抛 "Failed to fetch"（连接复用被掐、杀软拦一下之类），
+  // 这种是瞬时的，重试一次基本就过
+  let lastErr;
+  for(let attempt = 0; attempt < 2; attempt++){
+    try{
+      const r = await fetch('/api/upload?name=' + encodeURIComponent(name),
+                            {method:'POST', body: file});
+      let d = {};
+      try { d = await r.json(); } catch(e){}
+      if(!r.ok || d.error) throw new Error((d.error || ('HTTP ' + r.status)));
+      if(d.skipped) return 'skip';
+      await refreshFiles();
+      return 'ok';
+    }catch(e){
+      lastErr = e;
+      if(attempt === 0) await new Promise(r => setTimeout(r, 350));
+    }
+  }
+  throw new Error(name + '：' + (lastErr && lastErr.message || '上传失败'));
+}
+
+// 拖文件夹时递归把里面的文件全捞出来，路径用相对路径，后端会保留目录结构
+async function collectDropped(dt){
+  const out = [];
+  const entries = [...(dt.items || [])]
+    .map(it => it.webkitGetAsEntry && it.webkitGetAsEntry())
+    .filter(Boolean);
+  if(!entries.length){
+    return [...(dt.files || [])].map(f => [f, f.name]);
+  }
+  async function walk(entry, prefix){
+    if(entry.isFile){
+      const file = await new Promise((res, rej) => entry.file(res, rej));
+      out.push([file, prefix + entry.name]);
+      return;
+    }
+    if(!entry.isDirectory) return;
+    const reader = entry.createReader();
+    let batch;
+    do{
+      batch = await new Promise(res => reader.readEntries(res, () => res([])));
+      for(const e of batch) await walk(e, prefix + entry.name + '/');
+    }while(batch.length);
+  }
+  for(const en of entries) await walk(en, '');
+  return out;
+}
+
+// 拖整个工程时会有几百个无关文件（.git、build 产物、IDE 配置），
+// 全发上去既慢又容易把连接搞挂，这里先筛一遍
+const KEEP_EXT = /\.(c|cpp|cc|cxx|h|hpp|hh|hxx|inc|s|S|ld|lds|hex|bin|elf|uf2)$/;
+const SKIP_DIR = /(^|\/)(\.git|\.svn|\.hg|node_modules|build|Build|Objects|Listings|Debug|Release|\.vscode|\.idea|\.vs|__pycache__)(\/|$)/;
+
+function worthSending(rel){
+  if(SKIP_DIR.test(rel)) return false;
+  return KEEP_EXT.test(rel);
+}
+
+async function uploadMany(pairs){
+  let ok = 0, skip = 0; const errs = [];
+  for(const [file, name] of pairs){
+    if(!worthSending(name)){ skip++; continue; }
+    try {
+      if(await upload(file, name) === 'skip') skip++; else ok++;
+    }catch(e){ errs.push(e.message); }
+  }
+  const parts = [];
+  if(ok) parts.push(`已加入 ${ok} 个文件`);
+  if(skip) parts.push(`跳过 ${skip} 个无关文件`);
+  if(errs.length) setfb('err', `有 ${errs.length} 个没传上：` + errs.slice(0,3).join('；'));
+  else if(parts.length) setfb('ok', parts.join('，'));
+  await refreshFiles();
+}
+
+/* ---------- 拖拽 ---------- */
+const drop = $('#drop'), picker = $('#picker');
+drop.onclick = () => picker.click();
+picker.onchange = async () => {
+  await uploadMany([...picker.files].map(f => [f, f.name]));
+  picker.value = '';
+};
+$('#pickdir').onclick = e => { e.stopPropagation(); $('#picker-dir').click(); };
+$('#picker-dir').onchange = async e => {
+  const pairs = [...e.target.files].map(f => [f, f.webkitRelativePath || f.name]);
+  await uploadMany(pairs);
+  e.target.value = '';
+};
+['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev, e=>{
+  e.preventDefault(); drop.classList.add('over');
+}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev, e=>{
+  e.preventDefault(); drop.classList.remove('over');
+}));
+drop.addEventListener('drop', async e=>{
+  const pairs = await collectDropped(e.dataTransfer);
+  if(!pairs.length) return;
+  await uploadMany(pairs);
+});
+
+/* ---------- 通道 ---------- */
+let channel = 'swd';
+
+document.querySelectorAll('#seg button').forEach(b => {
+  b.onclick = () => {
+    channel = b.dataset.ch;
+    document.querySelectorAll('#seg button').forEach(x => x.classList.toggle('on', x === b));
+    $('#swd-box').style.display = channel === 'swd' ? '' : 'none';
+    $('#serial-box').style.display = channel === 'serial' ? '' : 'none';
+    if (channel === 'serial') loadPorts();
+  };
+});
+
+async function loadPorts(){
+  const sel = $('#port');
+  sel.innerHTML = '<option value="">读取中…</option>';
+  try{
+    const d = await jget('/api/ports');
+    if(!d.ports || !d.ports.length){
+      sel.innerHTML = '<option value="">没有可用串口</option>';
+      return;
+    }
+    sel.innerHTML = d.ports.map(p =>
+      `<option value="${p.device}">${p.device} — ${p.desc}</option>`).join('');
+  }catch(e){
+    sel.innerHTML = '<option value="">读取失败</option>';
+  }
+}
+
+$('#reload-ports').onclick = loadPorts;
+
+/* ---------- 烧录 ---------- */
+function setfb(kind, msg){
+  const el = $('#fb');
+  el.className = 'fb show ' + kind;
+  el.textContent = msg;
+}
+
+$('#go').onclick = async () => {
+  const body = {
+    erase: $('#opt-erase').checked,
+    verify: $('#opt-verify').checked,
+    reset: $('#opt-reset').checked,
+    channel: channel,
+  };
+  if(channel === 'serial'){
+    const p = $('#port').value;
+    if(!p){ setfb('err','先选一个串口'); return; }
+    body.port = p;
+    body.baud = +$('#baud').value;
+  }
+  setfb('run','任务已提交…');
+  const r = await jpost('/api/run', body);
+  if(r.error){ setfb('err', r.error); return; }
+  poll();
+};
+
+$('#clear').onclick = async () => { await jpost('/api/clear'); await refreshFiles(); };
+$('#reprobe').onclick = () => { probe(); env(); };
+$('#diag').onclick = async () => {
+  const log = $('#log');
+  log.innerHTML = '';
+  state.logFrom = -1;   // 让 addLines 不清屏
+  const d = await jget('/api/diag');
+  for(const [k,v] of Object.entries(d)){
+    const s = document.createElement('span');
+    s.textContent = String(k).padEnd(16) + ' = ' + JSON.stringify(v) + '\n';
+    if(String(v).match(/Error|失败|-1|空/)) s.className = 'err';
+    log.appendChild(s);
+  }
+  setfb('run','自检完成，看下方日志');
+};
+
+/* ---------- 日志轮询 ---------- */
+let polling = null;
+function addLines(data){
+  const log = $('#log');
+  if(state.logFrom === 0) log.innerHTML = '';
+  for(const line of data.lines){
+    const s = document.createElement('span');
+    s.textContent = line + '\n';
+    if(/失败|error|Error|FAIL/.test(line)) s.className = 'err';
+    else if(/完成|通过|已复位/.test(line)) s.className = 'ok';
+    log.appendChild(s);
+  }
+  state.logFrom = data.from;
+  log.scrollTop = log.scrollHeight;
+}
+
+async function poll(){
+  if(polling) return;
+  polling = setInterval(async ()=>{
+    try{
+      const d = await jget('/api/log?from=' + state.logFrom);
+      addLines(d);
+      if(!d.busy && d.status !== 'running'){
+        clearInterval(polling); polling = null;
+        await refreshFiles();
+        if(d.status === 'ok') setfb('ok','烧录成功，程序已开始运行');
+        else if(d.status === 'fail') setfb('err','烧录失败，详见日志');
+        probe();
+      } else {
+        setfb('run','烧录中…');
+      }
+    }catch(e){}
+  }, 400);
+}
+
+/* ---------- 启动 ---------- */
+refreshFiles(); probe(); env();
+poll();
+</script>
+</body>
+</html>

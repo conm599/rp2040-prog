@@ -1,0 +1,4 @@
+# 临时文件
+_strings_*.txt
+*.bak
+.DS_Store

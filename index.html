@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RP2040 烧录器固件合集</title>
+<meta name="description" content="用一块 RP2040 把 STM32、GD32、CH32、AVR、SPI Flash 统统刷进去。固件直接下载，开源工具链仓库全标明。">
+<style>
+:root{
+  --bg:#fbfbfa; --panel:#ffffff; --ink:#18181b; --ink2:#52525b; --ink3:#8b8b93;
+  --line:#e6e6e3; --line2:#d4d4d0;
+  --blue:#185fa5; --blue-bg:#e6f1fb;
+  --teal:#0f6e56; --teal-bg:#e1f5ee;
+  --amber:#854f0b; --amber-bg:#faeeda;
+  --red:#a32d2d; --red-bg:#fcebeb;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px 96px}
+
+header{padding:64px 0 40px;border-bottom:1px solid var(--line)}
+.kicker{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);margin:0 0 14px}
+h1{font-size:34px;line-height:1.25;margin:0 0 14px;font-weight:600;letter-spacing:-.01em}
+.lede{font-size:16px;color:var(--ink2);max-width:640px;margin:0}
+.stats{display:flex;gap:32px;margin-top:28px;flex-wrap:wrap}
+.stat b{display:block;font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--ink3)}
+
+section{padding-top:56px}
+h2{font-size:20px;font-weight:600;margin:0 0 8px;letter-spacing:-.01em}
+h2 .n{color:var(--ink3);font-weight:400;margin-right:10px;font-variant-numeric:tabular-nums}
+.sub{color:var(--ink2);font-size:14px;margin:0 0 28px;max-width:700px}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px}
+.card{
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:22px;display:flex;flex-direction:column;
+}
+.card h3{margin:0;font-size:16px;font-weight:600}
+.card .ver{font-family:var(--mono);font-size:11px;color:var(--ink3);margin-left:8px;font-weight:400}
+.card p.desc{margin:10px 0 16px;font-size:13.5px;color:var(--ink2);flex:0 0 auto}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.tag{font-size:11px;padding:3px 9px;border-radius:999px;font-family:var(--mono);white-space:nowrap}
+.t-swd{background:var(--blue-bg);color:var(--blue)}
+.t-swio{background:var(--teal-bg);color:var(--teal)}
+.t-updi{background:var(--amber-bg);color:var(--amber)}
+.t-spi{background:#f0eefc;color:#534ab7}
+.t-jtag{background:var(--red-bg);color:var(--red)}
+.t-neutral{background:#f1efe8;color:#5f5e5a}
+.specs{margin:0 0 18px;padding:0;list-style:none;font-size:12.5px}
+.specs li{display:flex;gap:10px;padding:5px 0;border-top:1px solid var(--line)}
+.specs li:first-child{border-top:none}
+.specs .k{color:var(--ink3);width:64px;flex:0 0 64px}
+.specs .v{color:var(--ink);font-family:var(--mono);font-size:12px;word-break:break-word}
+.actions{margin-top:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{
+  display:inline-flex;align-items:center;gap:7px;
+  background:var(--ink);color:#fff;text-decoration:none;
+  padding:9px 16px;border-radius:8px;font-size:13px;font-weight:500;
+  border:1px solid var(--ink);transition:opacity .15s;
+}
+.btn:hover{opacity:.82}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line2)}
+.btn.ghost:hover{background:#f4f4f2;opacity:1}
+.btn .sz{font-family:var(--mono);font-size:11px;opacity:.65;font-weight:400}
+.nofile{font-size:12px;color:var(--ink3);font-style:italic}
+
+.note{
+  border:1px solid var(--line);border-left:3px solid var(--amber);
+  background:var(--amber-bg);border-radius:8px;padding:16px 20px;margin:24px 0 0;
+  font-size:13.5px;color:#5c3a08;
+}
+.note strong{color:var(--amber);font-weight:600}
+.note code{background:rgba(133,79,11,.1);padding:1px 5px;border-radius:4px;font-family:var(--mono);font-size:12px}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:4px}
+th{text-align:left;font-weight:500;color:var(--ink3);font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;padding:0 12px 10px 0;border-bottom:1px solid var(--line2)}
+td{padding:13px 12px 13px 0;border-bottom:1px solid var(--line);vertical-align:top}
+td a{color:var(--blue);text-decoration:none;font-family:var(--mono);font-size:12.5px;word-break:break-all}
+td a:hover{text-decoration:underline}
+td.name{font-weight:500;white-space:nowrap}
+td .d{color:var(--ink3);font-size:12px;display:block;margin-top:2px;font-family:inherit}
+
+.steps{counter-reset:s;list-style:none;padding:0;margin:0;display:grid;gap:14px}
+.steps li{counter-increment:s;position:relative;padding-left:44px;font-size:14px;color:var(--ink2)}
+.steps li::before{
+  content:counter(s);position:absolute;left:0;top:-1px;
+  width:26px;height:26px;border-radius:50%;background:var(--ink);color:#fff;
+  font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;
+  font-variant-numeric:tabular-nums;
+}
+.steps b{color:var(--ink);font-weight:600}
+.steps code{background:#f1efe8;padding:1px 6px;border-radius:4px;font-family:var(--mono);font-size:12px;color:var(--ink)}
+
+.two{display:grid;grid-template-columns:1fr 1fr;gap:40px}
+@media(max-width:760px){
+  .two{grid-template-columns:1fr;gap:32px}
+  h1{font-size:26px}
+  header{padding:40px 0 32px}
+}
+
+footer{margin-top:72px;padding-top:28px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink3)}
+footer a{color:var(--ink3)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="kicker">RP2040 / RP2350 · Programmer Firmware</p>
+  <h1>树莓派<br>RP 2040等串TTL烧录器</h1>
+  <p class="lede">
+    RP2040 的 PIO 能硬怼出任意时序，所以它可以是 CMSIS-DAP 调试器、CH32 的单线烧录器、
+    AVR 的 UPDI 编程器、SPI Flash 的读写器。这里把能直接用的固件打包好，开源工具链的仓库也一并列清。
+  </p>
+  <div class="stats">
+    <div class="stat"><b>8</b><span>可直接下载的固件</span></div>
+    <div class="stat"><b>6</b><span>覆盖的调试协议</span></div>
+    <div class="stat"><b>10</b><span>开源工具链仓库</span></div>
+  </div>
+</header>
+
+<section>
+  <h2><span class="n">01</span>固件下载</h2>
+  <p class="sub">全部为 <code style="font-family:var(--mono);font-size:12.5px">.uf2</code> 格式，按住 BOOTSEL 插 USB，拖进 U 盘即可。文件都放在本站 <code style="font-family:var(--mono);font-size:12.5px">/firmware/</code> 目录下。</p>
+
+  <div class="grid">
+
+    <div class="card">
+      <h3>debugprobe<span class="ver">v2.3.1</span></h3>
+      <p class="desc">树莓派官方调试器固件。CMSIS-DAP v2，免驱，生态支持最好，也是绝大多数教程默认的那一个。</p>
+      <div class="tags"><span class="tag t-swd">CMSIS-DAP v2</span><span class="tag t-swd">SWD</span><span class="tag t-neutral">官方</span></div>
+      <ul class="specs">
+        <li><span class="k">支持</span><span class="v">ARM Cortex-M 全系（STM32 / GD32 / APM32 / MM32 / CH32F）</span></li>
+        <li><span class="k">接线</span><span class="v">GP2→SWCLK GP3→SWDIO GND→GND</span></li>
+        <li><span class="k">工具</span><span class="v">pyOCD / OpenOCD / Keil / CubeIDE</span></li>
+      </ul>
+      <div class="actions">
+        <a class="btn" href="firmware/debugprobe_on_pico.uf2" download>下载 <span class="sz">104 KB</span></a>
+        <a class="btn ghost" href="https://github.com/raspberrypi/debugprobe" target="_blank" rel="noopener">源码</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>debugprobe<span class="ver">Pico 2</span></h3>
+      <p class="desc">同一套固件的 RP2350 版本。手上是 Pico 2 / Pico 2 W 就用这个，刷到 RP2040 上不能用——uf2 里带芯片族 ID（<code style="font-family:var(--mono);font-size:12px">0xE48BFF59</code>），RP2040 的 bootloader 会直接拒收，表现是盘一直在、文件拷进去没反应。</p>
+      <div class="tags"><span class="tag t-swd">CMSIS-DAP v2</span><span class="tag t-swd">SWD</span><span class="tag t-neutral">RP2350</span></div>
+      <ul class="specs">
+        <li><span class="k">支持</span><span class="v">ARM Cortex-M 全系</span></li>
+        <li><span class="k">接线</span><span class="v">GP2→SWCLK GP3→SWDIO GND→GND，与 RP2040 版完全相同</span></li>
+        <li><span class="k">适用</span><span class="v">Pico 2 / Pico 2 W（RP2350）</span></li>
+        <li><span class="k">工具</span><span class="v">pyOCD / OpenOCD / Keil</span></li>
+      </ul>
+      <div class="actions">
+        <a class="btn" href="firmware/debugprobe_on_pico2.uf2" download>下载 <span class="sz">98 KB</span></a>
+        <a class="btn ghost" href="https://github.com/raspberrypi/debugprobe" target="_blank" rel="noopener">源码</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>pico_rvd<span class="ver">v0.1</span></h3>
+      <p class="desc">把 RP2040 变成 CH32V003 的烧录器。走 WCH 的 SWIO 单线协议，官方工具不认这套，必须用专用固件。</p>
+      <div class="tags"><span class="tag t-swio">WCH SWIO</span><span class="tag t-neutral">单线</span><span class="tag t-neutral">RISC-V</span></div>
+      <ul class="specs">
+        <li><span class="k">支持</span><span class="v">CH32V003（部分 CH32V 系列）</span></li>
+        <li><span class="k">接线</span><span class="v">GP4→PD1(SWIO) GND→GND，SWIO 需 1kΩ 上拉到 3V3</span></li>
+        <li><span class="k">工具</span><span class="v">固件自带串口控制台 / minichlink</span></li>
+      </ul>
+      <div class="actions">
+        <a class="btn" href="firmware/pico_rvd.uf2" download>下载 <span class="sz">177 KB</span></a>
+        <a class="btn ghost" href="https://github.com/Apache02/pico-rvd" target="_blank" rel="noopener">源码</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>DapperMime<span class="ver">20210225</span></h3>
+      <p class="desc">老牌的 CMSIS-DAP v1 固件，走 HID 接口，连驱动都不用装。新版软件不认的时候它往往能救场。</p>
+      <div class="tags"><span class="tag t-swd">CMSIS-DAP v1</span><span class="tag t-swd">SWD</span><span class="tag t-neutral">免驱</span></div>
+      <ul class="specs">
+        <li><span class="k">支持</span><span class="v">ARM Cortex-M 全系</span></li>
+        <li><span class="k">接线</span><span class="v">GP2→SWCLK GP3→SWDIO GND→GND</span></li>
+        <li><span class="k">工具</span><span class="v">pyOCD / OpenOCD / Keil</span></li>
+      </ul>
+      <div class="actions">
+        <a class="btn" href="firmware/DapperMime.uf2" download>下载 <span class="sz">58 KB</span></a>
+        <a class="btn ghost" href="https://github.com/majbthrd/DapperMime" target="_blank" rel="noopener">源码</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>yapicoprobe<span class="ver">v2.02.06</span></h3>
+      <p class="desc">功能更全的社区版探针，在 CMSIS-DAP 基础上加了额外通道，适合需要 SWO / 串口同传的场景。</p>
+      <div class="tags"><span class="tag t-swd">CMSIS-DAP</span><span class="tag t-swd">SWD</span><span class="tag t-neutral">社区</span></div>
+      <ul class="specs">
+        <li><span class="k">支持</span><span class="v">ARM Cortex-M 全系</span></li>
+        <li><span class="k">接线</span><span class="v">GP2→SWCLK GP3→SWDIO GND→GND</span></li>
+        <li><span class="k">工具</span><span class="v">pyOCD / OpenOCD / Keil</span></li>
+      </ul>
+      <div class="actions">
+        <a class="btn" href="firmware/yapicoprobe.uf2" download>下载 <span class="sz">326 KB</span></a>
+        <a class="btn ghost" href="https://github.com/rgrr/yapicoprobe" target="_blank" rel="noopener">源码</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>FiXPro<span class="ver">v2.1.0</span></h3>
+      <p class="desc">通用编程器，一个固件覆盖 SPI Flash、I2C EEPROM、JTAG、SWD、AVR UPDI、1-Wire。芯片库 200 多个，能自动读 JEDEC ID 识别型号。界面是仓库里那个静态网页，用 Chrome 打开后点连接即可——固件本身不跑 HTTP 服务，它就是一条串口。</p>
+      <div class="tags"><span class="tag t-spi">SPI</span><span class="tag t-updi">UPDI</span><span class="tag t-swd">SWD</span><span class="tag t-spi">I2C</span></div>
+      <ul class="specs">
+        <li><span class="k">支持</span><span class="v">W25Q / MX25L / GD25Q / N25Q、AT24C、STM32 / nRF52 / ESP32、ATmega / ATtiny</span></li>
+        <li><span class="k">接线</span><span class="v">SPI：GP16 MISO、GP18 SCK、GP19 MOSI、GP17 CS；I2C：GP20 SDA、GP21 SCL</span></li>
+        <li><span class="k">工具</span><span class="v">Web Serial 网页（Chrome 89+ / Edge / Opera），也有 Python CLI</span></li>
+        <li><span class="k">协议</span><span class="v">文本命令，115200 波特；<code style="font-family:var(--mono);font-size:12px">PING</code> 回 <code style="font-family:var(--mono);font-size:12px">CAFE</code> 即通</span></li>
+      </ul>
+      <div class="actions">
+        <a class="btn" href="fixpro/index.html" target="_blank" rel="noopener">打开烧录界面</a>
+        <a class="btn" href="firmware/FiXPro_v2.1.0.uf2" download>固件 <span class="sz">183 KB</span></a>
+        <a class="btn ghost" href="https://github.com/MYMDO/fixpro" target="_blank" rel="noopener">源码</a>
+      </div>
+      <p style="font-size:12px;color:var(--ink3);margin:10px 0 0">烧录界面已镜像到本站，用 Chrome / Edge 打开即可点 Connect 连串口，不需要装任何软件。</p>
+    </div>
+
+    <div class="card">
+      <h3>pico-uart-bridge<span class="ver">v5.0</span></h3>
+      <p class="desc">纯 USB 转 TTL 桥接固件，不做任何调试。刷进去就是一块双口 USB 串口卡：两个独立 CDC 设备，分别对应两组硬件 UART，波特率任意设，跟 CH340 / CP2102 一个用法。</p>
+      <div class="tags"><span class="tag t-neutral">USB-TTL</span><span class="tag t-neutral">双串口</span><span class="tag t-neutral">免驱</span></div>
+      <ul class="specs">
+        <li><span class="k">串口 0</span><span class="v">GP16 = TX，GP17 = RX</span></li>
+        <li><span class="k">串口 1</span><span class="v">GP4 = TX，GP5 = RX（和 debugprobe 的串口同脚）</span></li>
+        <li><span class="k">注意</span><span class="v">3.3V 电平，接 5V 目标需要电平转换；GND 必须共地</span></li>
+      </ul>
+      <div class="actions">
+        <a class="btn" href="firmware/uart-bridge-pico.uf2" download>下载 <span class="sz">63 KB</span></a>
+        <a class="btn ghost" href="https://github.com/Noltari/pico-uart-bridge" target="_blank" rel="noopener">源码</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>MioLink<span class="ver">自编译</span></h3>
+      <p class="desc">Black Magic Probe 的 RP2040 移植。比 CMSIS-DAP 多出 JTAG 支持，还能在程序全速运行时用 SWO / RTT 往外吐调试信息。老 ARM7/ARM9、RISC-V 调试口、JTAG 菊花链这些 CMSIS-DAP 碰不了的情况，就得靠它。</p>
+      <div class="tags"><span class="tag t-jtag">JTAG</span><span class="tag t-swd">SWD</span><span class="tag t-swd">SWO / RTT</span><span class="tag t-neutral">GDB</span></div>
+      <ul class="specs">
+        <li><span class="k">支持</span><span class="v">ARM Cortex-M / 部分 ARM7、ARM9、RISC-V</span></li>
+        <li><span class="k">接线</span><span class="v">SWD：GP2→SWCLK GP3→SWDIO GND→GND；JTAG：另有 TDI/TDO/TMS 定义见仓库</span></li>
+        <li><span class="k">工具</span><span class="v">GDB（arm-none-eabi-gdb）/ OpenOCD 走 GDB server</span></li>
+      </ul>
+      <div class="actions">
+        <a class="btn" href="firmware/MioLink_v1.0_rp2040.uf2" download>下载 <span class="sz">979 KB</span></a>
+        <a class="btn ghost" href="https://github.com/JTAGNexus/MioLink" target="_blank" rel="noopener">源码</a>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="note" style="border-left-color:var(--teal);background:var(--teal-bg);color:#0c5442">
+    <strong style="color:var(--teal)">实测记录（2026-11-21，RP2040 实板逐个刷入验证）</strong>
+    <table style="margin-top:10px">
+      <tr><th style="width:30%">固件</th><th style="width:20%">VID:PID</th><th>刷入后表现</th></tr>
+      <tr><td class="name">debugprobe</td><td class="name">2E8A:000C</td><td>CMSIS-DAP v2 + 串口，pyOCD 直接识别为调试器</td></tr>
+      <tr><td class="name">DapperMime</td><td class="name">CAFE:4005</td><td>CMSIS-DAP v1，pyOCD 识别为 <code style="font-family:var(--mono);font-size:12px">TinyUSB RP2040 CMSIS-DAP</code></td></tr>
+      <tr><td class="name">pico_rvd</td><td class="name">2E8A:000A</td><td>串口控制台，无调试器功能（设计如此）</td></tr>
+      <tr><td class="name">FiXPro</td><td class="name">2E8A:000A</td><td>串口设备，供浏览器 Web Serial 连接</td></tr>
+      <tr><td class="name">MioLink</td><td class="name">1D50:6018</td><td>标准 Black Magic Probe 设备号，GDB server + 两个串口</td></tr>
+      <tr><td class="name">yapicoprobe</td><td class="name">CMSIS-DAP v2</td><td>额外挂载一个只读 U 盘，内含目标芯片 flash 镜像</td></tr>
+    </table>
+  </div>
+
+  <div class="note">
+    <strong>MioLink 这份固件是自己编的：</strong><br>
+    上游仓库不发布预编译 uf2，所以这里的是用 pico-sdk 2.3.1 + arm-none-eabi-gcc 15.2.1、
+    按仓库锁定的三个依赖提交（blackmagic、tinyusb、FreeRTOS-Kernel）编译出来的，
+    Flash 占用 489 KB / 2 MB。烧进去后它会以 GDB server 的形式工作，
+    用法和原版 Black Magic Probe 一致，不是 CMSIS-DAP，pyOCD 认不到，别拿错工具。
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">02</span>为什么私有协议要单独处理</h2>
+  <p class="sub">这是最容易踩坑的地方：通用的调试器固件，对国产芯片不一定管用。</p>
+
+  <div class="two">
+    <div>
+      <table>
+        <tr><th style="width:46%">芯片 / 协议</th><th>能不能用 debugprobe</th></tr>
+        <tr><td class="name">STM32 / GD32 / APM32<span class="d">标准 ARM SWD</span></td><td>能，直接烧</td></tr>
+        <tr><td class="name">CH32F103<span class="d">Cortex-M3，SWD 兼容</span></td><td>多数能，但建议配 WCH 的 OpenOCD 分支</td></tr>
+        <tr><td class="name">CH32V003 / V 系列<span class="d">RISC-V + SWIO 单线</span></td><td><b style="color:var(--red)">不能</b>，协议完全不同</td></tr>
+        <tr><td class="name">WCH CH5xx（蓝牙）<span class="d">USB ISP bootloader</span></td><td>不用探针，wchisp 直接走 USB</td></tr>
+        <tr><td class="name">AVR（ATmega / ATtiny）<span class="d">ISP 或 UPDI</span></td><td>不能，需要 FiXPro 这类专用固件</td></tr>
+        <tr><td class="name">ESP8266 / ESP32<span class="d">自带 USB 或串口下载</span></td><td>不需要探针，esptool 就够了</td></tr>
+      </table>
+    </div>
+    <div>
+      <p style="font-size:13.5px;color:var(--ink2);margin-top:0">
+        CH32V003 用的是 <b style="color:var(--ink)">SWIO 单线协议</b>：把时钟信息编码进数据波形里自同步，
+        物理上只要一根 PD1。标准 SWD 是数据线加时钟线两根，两者电气层就不同，通用调试器根本没法降级兼容。
+      </p>
+      <p style="font-size:13.5px;color:var(--ink2)">
+        WCH 官方的 WCH-LinkE 固件是闭源的，所以社区绕了两条路：一是用 RP2040 或另一颗 CH32V003
+        重新实现 SWIO 时序（就是上面的 pico_rvd），二是直接走芯片内置的 USB ISP bootloader，
+        连探针都不需要。
+      </p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">03</span>开源工具链</h2>
+  <p class="sub">固件只是硬件那一半，另一半是主机侧的工具。官方工具链不认的芯片，基本都能在这里找到开源替代。</p>
+
+  <table>
+    <tr><th style="width:150px">项目</th><th style="width:120px">适用</th><th>说明</th></tr>
+    <tr>
+      <td class="name"><a href="https://github.com/pyocd/pyOCD" target="_blank" rel="noopener">pyocd/pyOCD</a></td>
+      <td>ARM</td>
+      <td>Python 写的调试器，命令行友好，支持自定义 target 定义（页大小、Flash 容量都能自己改，兼容片救星）</td>
+    </tr>
+    <tr>
+      <td class="name"><a href="https://github.com/openocd-org/openocd" target="_blank" rel="noopener">openocd-org/openocd</a></td>
+      <td>通用</td>
+      <td>最主流的开源调试器，内置 STM32F1 等芯片定义，能自动识别 Flash 容量</td>
+    </tr>
+    <tr>
+      <td class="name"><a href="https://github.com/openwch/openocd" target="_blank" rel="noopener">openwch/openocd</a></td>
+      <td>CH32</td>
+      <td>WCH 官方维护的 OpenOCD 分支，支持 CH32F/V 系列，配 WCH-LinkE 或改过的探针</td>
+    </tr>
+    <tr>
+      <td class="name"><a href="https://github.com/ch32-rs/wlink" target="_blank" rel="noopener">ch32-rs/wlink</a></td>
+      <td>CH32</td>
+      <td>Rust 写的 CH32 烧录工具，支持 WCH-LinkE 和 USB ISP，跨平台，不依赖官方工具</td>
+    </tr>
+    <tr>
+      <td class="name"><a href="https://github.com/ch32-rs/wchisp" target="_blank" rel="noopener">ch32-rs/wchisp</a></td>
+      <td>CH32 USB</td>
+      <td>走芯片内置 USB ISP bootloader，不需要任何探针，插上 USB 就能刷</td>
+    </tr>
+    <tr>
+      <td class="name"><a href="https://github.com/cnlohr/ch32fun" target="_blank" rel="noopener">cnlohr/ch32fun</a></td>
+      <td>CH32V</td>
+      <td>极简开发环境，附带 minichlink（支持 WCH-LinkE / STM32F042 / ESP32S2 / CH32V003 等多种探针），带 gdbserver</td>
+    </tr>
+    <tr>
+      <td class="name"><a href="https://github.com/probe-rs/probe-rs" target="_blank" rel="noopener">probe-rs/probe-rs</a></td>
+      <td>ARM / RISC-V</td>
+      <td>Rust 生态的调试与烧录工具，支持 CMSIS-DAP、J-Link 和大量芯片，烧录速度快</td>
+    </tr>
+    <tr>
+      <td class="name"><a href="https://github.com/avrdudes/avrdude" target="_blank" rel="noopener">avrdudes/avrdude</a></td>
+      <td>AVR</td>
+      <td>AVR 官方烧录工具，配 FiXPro 的 UPDI 或 ISP 通道使用</td>
+    </tr>
+    <tr>
+      <td class="name"><a href="https://github.com/espressif/esptool" target="_blank" rel="noopener">espressif/esptool</a></td>
+      <td>ESP</td>
+      <td>ESP 系列烧录，不需要探针，串口直接进下载模式</td>
+    </tr>
+    <tr>
+      <td class="name"><a href="https://github.com/stm32duino/stm32flash" target="_blank" rel="noopener">stm32flash</a></td>
+      <td>STM32</td>
+      <td>串口 ISP 烧录，走系统 bootloader，需要 BOOT0 拉高，是没有调试器时的兜底方案</td>
+    </tr>
+  </table>
+</section>
+
+<section>
+  <h2><span class="n">04</span>刷入步骤</h2>
+  <div class="two">
+    <ol class="steps">
+      <li><b>下载固件</b><br>点上面任意一个下载按钮，得到 <code>.uf2</code> 文件。</li>
+      <li><b>进入 BOOTSEL</b><br>按住板上的 BOOTSEL 键不放，插 USB，然后松手。</li>
+      <li><b>拖进去</b><br>电脑上出现 <code>RPI-RP2</code> 盘，把 uf2 文件复制进去。</li>
+      <li><b>自动重启</b><br>盘符消失、设备重新枚举，固件生效。RP2040 的 bootloader 在 ROM 里，刷错也变不了砖。</li>
+    </ol>
+    <div>
+      <div class="note" style="margin-top:0;border-left-color:var(--teal);background:var(--teal-bg);color:#0c5442">
+        <strong style="color:var(--teal)">FiXPro 刷完直接就能用</strong><br>
+        刷 FiXPro 之后，点
+        <a href="fixpro/index.html" target="_blank" rel="noopener" style="color:var(--teal);font-weight:700">打开烧录界面</a>
+        就能连上它。界面走浏览器的 Web Serial，必须 <b>Chrome / Edge / Opera</b>，Firefox 和 Safari 没实现这个 API。
+      </div>
+      <div class="note" style="margin-top:0;border-left-color:var(--blue);background:var(--blue-bg);color:#0c447c">
+        <strong style="color:var(--blue)">换固件随时可以</strong><br>
+        想从调试器切回 MicroPython，再走一遍 BOOTSEL 流程就行，没有任何一次性烧录锁。
+        这也是它比成品烧录器划算的根本原因——功能不是焊死的。
+      </div>
+      <div class="note">
+        <strong>接线提醒</strong><br>
+        SWD 是直连，GP2 对 SWCLK、GP3 对 SWDIO，<b>不像串口那样要交叉</b>。
+        另外别把 Pico 的 3V3 和目标板的电源同时接上，两路电源会打架。
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="n">05</span>接线说明</h2>
+  <p class="sub">以 <b>debugprobe</b>（CMSIS-DAP）接 STM32 / GD32 的 SWD 口为例。四根线，一根都不能凭感觉插。</p>
+
+  <div style="background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 16px;margin:20px 0 24px">
+    <svg viewBox="0 0 1000 360" style="width:100%;height:auto;display:block" xmlns="http://www.w3.org/2000/svg">
+      <text x="165" y="34" text-anchor="middle" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="15" font-weight="700" fill="#18181b">RP2040 / Pico</text>
+      <text x="835" y="34" text-anchor="middle" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="15" font-weight="700" fill="#18181b">目标板（STM32）</text>
+
+      <rect x="40" y="52" width="250" height="270" rx="10" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+      <rect x="710" y="52" width="250" height="270" rx="10" fill="#f6f4ec" stroke="#ddd8c4" stroke-width="1.5"/>
+      <text x="700" y="90" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="13" fill="#a32d2d" font-weight="700">SWD 调试口</text>
+      <text x="700" y="110" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="12" fill="#8b8b93">（不是串口）</text>
+
+      <text x="60" y="88" font-family="-apple-system,sans-serif" font-size="12" fill="#8b8b93">正视图 · 引脚靠板边</text>
+
+      <circle cx="290" cy="120" r="5" fill="#185fa5"/>
+      <text x="272" y="125" text-anchor="end" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14" font-weight="700" fill="#18181b">GP2</text>
+      <circle cx="290" cy="175" r="5" fill="#185fa5"/>
+      <text x="272" y="180" text-anchor="end" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14" font-weight="700" fill="#18181b">GP3</text>
+      <circle cx="290" cy="230" r="5" fill="#52525b"/>
+      <text x="272" y="235" text-anchor="end" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14" font-weight="700" fill="#18181b">GND</text>
+      <circle cx="290" cy="285" r="5" fill="#854f0b"/>
+      <text x="272" y="290" text-anchor="end" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14" font-weight="700" fill="#18181b">3V3(OUT)</text>
+
+      <circle cx="710" cy="120" r="5" fill="#185fa5"/>
+      <text x="728" y="125" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14" font-weight="700" fill="#18181b">SWCLK</text>
+      <circle cx="710" cy="175" r="5" fill="#185fa5"/>
+      <text x="728" y="180" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14" font-weight="700" fill="#18181b">SWDIO</text>
+      <circle cx="710" cy="230" r="5" fill="#52525b"/>
+      <text x="728" y="235" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14" font-weight="700" fill="#18181b">GND</text>
+      <circle cx="710" cy="285" r="5" fill="#854f0b"/>
+      <text x="728" y="290" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="14" font-weight="700" fill="#18181b">3V3</text>
+
+      <line x1="296" y1="120" x2="704" y2="120" stroke="#185fa5" stroke-width="2.5"/>
+      <line x1="296" y1="175" x2="704" y2="175" stroke="#185fa5" stroke-width="2.5"/>
+      <line x1="296" y1="230" x2="704" y2="230" stroke="#52525b" stroke-width="2.5"/>
+      <line x1="296" y1="285" x2="704" y2="285" stroke="#854f0b" stroke-width="2.5" stroke-dasharray="8 6"/>
+
+      <rect x="422" y="104" width="156" height="24" rx="12" fill="#e6f1fb"/>
+      <text x="500" y="121" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="12" font-weight="700" fill="#185fa5">时钟 · 直连</text>
+      <rect x="422" y="159" width="156" height="24" rx="12" fill="#e6f1fb"/>
+      <text x="500" y="176" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="12" font-weight="700" fill="#185fa5">数据 · 直连</text>
+      <rect x="422" y="214" width="156" height="24" rx="12" fill="#f1efe8"/>
+      <text x="500" y="231" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="12" font-weight="700" fill="#5f5e5a">地 · 必须接</text>
+      <rect x="404" y="269" width="192" height="24" rx="12" fill="#faeeda"/>
+      <text x="500" y="286" text-anchor="middle" font-family="-apple-system,sans-serif" font-size="12" font-weight="700" fill="#854f0b">可选 · 二选一供电</text>
+    </svg>
+  </div>
+
+  <div class="two">
+    <div>
+      <table>
+        <tr><th style="width:34%">Pico 引脚</th><th style="width:30%">目标板</th><th>说明</th></tr>
+        <tr><td class="name">GP2</td><td class="name">SWCLK</td><td>调试时钟</td></tr>
+        <tr><td class="name">GP3</td><td class="name">SWDIO</td><td>调试数据（双向）</td></tr>
+        <tr><td class="name">GND</td><td class="name">GND</td><td>必须共地，否则握手失败</td></tr>
+        <tr><td class="name">3V3(OUT)</td><td class="name">3V3</td><td>可选，用 Pico 给板子供电时才接</td></tr>
+      </table>
+      <p style="font-size:12.5px;color:var(--ink3);margin-top:12px">
+        Pico 上 GP2 和 GP3 是相邻的两个针，GND 就在旁边；目标板上 SWD 口通常是
+        <code style="font-family:var(--mono);font-size:12px">3V3 / SWDIO / SWCLK / GND</code> 四针，顺序各家不同，认丝印别认位置。
+      </p>
+    </div>
+    <div>
+      <div class="note" style="margin-top:0;border-left-color:var(--blue);background:var(--blue-bg);color:#0c447c">
+        <strong style="color:var(--blue)">SWD 是直连，不是交叉</strong><br>
+        串口要 TX 接 RX，SWD 反过来：<b>同名对同名</b>。这是两套东西最容易搞混的地方。
+        把 SWDIO 接到 SWCLK 上，现象是连不上或者读到全 0。
+      </div>
+      <div class="note" style="border-left-color:var(--red);background:var(--red-bg);color:#7a2020">
+        <strong style="color:var(--red)">两个供电二选一</strong><br>
+        目标板自己插着 USB 或适配器，就把 <b>3V3 那根拔掉</b>，只留三根信号线加地。
+        两路电源同时接上会互相灌电流，轻则复位异常，重则烧稳压管。
+      </div>
+      <div class="note">
+        <strong>不用管 BOOT0</strong><br>
+        SWD 直接访问内核，绕过启动模式选择。串口 ISP 那套“拨 BOOT0、断上电卡时序”的流程，这里完全用不上。
+      </div>
+    </div>
+  </div>
+
+  <div class="note" style="border-left-color:var(--amber);background:var(--amber-bg);color:#6b3f08">
+    <strong style="color:var(--amber)">不同固件的引脚不一样，别串着用</strong><br>
+    debugprobe / DapperMime / yapicoprobe 都是 <b>GP2→SWCLK、GP3→SWDIO</b>；
+    pico_rvd 走 CH32 的单线 SWIO，用的是 <b>GP4</b>，还要加 1kΩ 上拉；
+    FiXPro 的 SPI / I2C / UPDI 分散在 GP16–GP21。换了固件，接线就得跟着换。
+  </div>
+</section>
+
+<footer>
+  固件均来自各项目官方发布页，版权归原作者。本站只做汇总与镜像，下载前建议核对仓库里的最新版本。
+</footer>
+
+</div>
+</body>
+</html>

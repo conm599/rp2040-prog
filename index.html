@@ -123,6 +123,7 @@ footer a{color:var(--ink3)}
     <div class="stat"><b>6</b><span>覆盖的调试协议</span></div>
     <div class="stat"><b>10</b><span>开源工具链仓库</span></div>
     <div class="stat"><b>1</b><span>Agent Skill 包</span></div>
+    <div class="stat"><b>1</b><span>配套桌面烧录器</span></div>
   </div>
 </header>
 
@@ -271,6 +272,27 @@ footer a{color:var(--ink3)}
       </div>
     </div>
 
+    <div class="card">
+      <h3>Flasher<span class="ver">v1.0.0 · Windows</span></h3>
+      <p class="desc">配套的桌面烧录器，把「选固件、接线、敲命令」压缩成拖拽：双击运行，浏览器自动打开页面，把 hex / bin / elf 或者 .c 源码拖进去就烧。免装 Python，编译器也一并打包在里面。</p>
+      <div class="tags"><span class="tag t-swd">SWD</span><span class="tag t-jtag">串口 ISP</span><span class="tag t-neutral">内置 arm-gcc</span><span class="tag t-spi">多文件工程</span></div>
+      <ul class="specs">
+        <li><span class="k">通道</span><span class="v">SWD（pyOCD + debugprobe，不用动 BOOT0）／ 串口 ISP（BOOT0=1）</span></li>
+        <li><span class="k">源码</span><span class="v">拖 .c / .h 直接编译，多文件工程和整个文件夹都能整批拖</span></li>
+        <li><span class="k">大小</span><span class="v">63 MB 单文件 exe，首次启动解压工具链约 5 秒</span></li>
+      </ul>
+      <div class="actions">
+        <a class="btn" href="https://github.com/conm599/rp2040-prog/releases/latest/download/Flasher.exe">下载 exe</a>
+        <a class="btn ghost" href="https://github.com/conm599/rp2040-prog/releases/latest/download/flasher-src.zip">源码</a>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="note">
+    <strong>Flasher 的两个提醒：</strong><br>
+    一是 exe 没做代码签名，Windows SmartScreen 或杀软可能拦一下，选「仍要运行」即可，源码在同一个 release 里；
+    二是它只是<b>上位机</b>，真正烧片子还得先给 RP2040 刷上 debugprobe（或串口桥）固件，也就是上面那几张卡里的东西。
   </div>
 
   <div class="note" style="border-left-color:var(--teal);background:var(--teal-bg);color:#0c5442">

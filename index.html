@@ -68,6 +68,37 @@ h2 .n{color:var(--ink3);font-weight:400;margin-right:10px;font-variant-numeric:t
 .btn.ghost{background:transparent;color:var(--ink);border-color:var(--line2)}
 .btn.ghost:hover{background:#f4f4f2;opacity:1}
 .btn .sz{font-family:var(--mono);font-size:11px;opacity:.65;font-weight:400}
+button.btn{font-family:inherit;cursor:pointer}
+
+/* 下载源选择弹层 */
+.dl-mask{position:fixed;inset:0;background:rgba(24,24,27,.44);display:flex;align-items:center;
+  justify-content:center;padding:20px;z-index:200;opacity:0;pointer-events:none;transition:opacity .18s}
+.dl-mask.on{opacity:1;pointer-events:auto}
+.dl-box{background:var(--panel);border-radius:14px;padding:26px 24px 20px;max-width:560px;width:100%;
+  position:relative;box-shadow:0 24px 70px rgba(0,0,0,.22);max-height:86vh;overflow:auto}
+.dl-box h3{margin:0 0 8px;font-size:17px;font-weight:600}
+.dl-box .dl-sub{margin:0 0 18px;font-size:13px;color:var(--ink2);line-height:1.6}
+.dl-x{position:absolute;top:12px;right:14px;background:none;border:none;font-size:22px;line-height:1;
+  color:var(--ink3);cursor:pointer;padding:4px 8px;border-radius:6px}
+.dl-x:hover{background:#f1f1ef;color:var(--ink)}
+.dl-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.dl-item{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:10px;
+  padding:9px 12px;background:#fcfcfb;transition:border-color .15s,background .15s}
+.dl-item:hover{border-color:var(--line2);background:#fff}
+.dl-item .nm{flex:1;min-width:0;font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dl-item .nm em{font-style:normal;font-weight:400;color:var(--ink3);font-size:12px;margin-left:6px}
+.dl-item .ms{font-family:var(--mono);font-size:11.5px;color:var(--ink3);min-width:58px;text-align:right}
+.dl-item .ms.fast{color:var(--teal);font-weight:600}
+.dl-item .ms.dead{color:var(--red)}
+.dl-item .go{text-decoration:none;font-size:12.5px;font-weight:500;color:#fff;background:var(--blue);
+  padding:6px 13px;border-radius:7px;border:none;cursor:pointer;font-family:inherit;white-space:nowrap}
+.dl-item .go:hover{opacity:.88}
+.dl-item .cp{background:none;border:1px solid var(--line2);color:var(--ink2);font-size:12px;
+  padding:6px 9px;border-radius:7px;cursor:pointer;font-family:inherit}
+.dl-item .cp:hover{background:#f4f4f2}
+.dl-foot{margin:16px 0 0;font-size:12px;color:var(--ink3);line-height:1.6}
+.dl-foot button{background:none;border:none;color:var(--blue);cursor:pointer;font-size:12px;
+  padding:0;text-decoration:underline;font-family:inherit}
 .nofile{font-size:12px;color:var(--ink3);font-style:italic}
 
 .note{
@@ -130,7 +161,7 @@ footer a{color:var(--ink3)}
 <section>
   <h2><span class="n">01</span>固件下载</h2>
   <p class="sub">全部为 <code style="font-family:var(--mono);font-size:12.5px">.uf2</code> 格式，按住 BOOTSEL 插 USB，拖进 U 盘即可。</p>
-  <p class="sub" style="margin-top:-10px">不想碰命令行的话，列表最后有一张 <a href="https://github.com/conm599/rp2040-prog/releases/latest/download/Flasher.exe" style="color:var(--blue);text-decoration:none">Flasher.exe</a>——Windows 桌面版，把固件或源码拖进去就烧，连编译器都打包在里面了。</p>
+  <p class="sub" style="margin-top:-10px">不想碰命令行的话，列表最后有一张 <a href="#flasher" style="color:var(--blue);text-decoration:none">Flasher.exe</a>——Windows 桌面版，把固件或源码拖进去就烧，连编译器都打包在里面了；国内直连 GitHub 慢的话，那张卡里带几个镜像源可以选。</p>
 
   <div class="grid">
 
@@ -273,7 +304,7 @@ footer a{color:var(--ink3)}
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="flasher">
       <h3>Flasher<span class="ver">v1.0.0 · Windows</span></h3>
       <p class="desc">配套的桌面烧录器，把「选固件、接线、敲命令」压缩成拖拽：双击运行，浏览器自动打开页面，把 hex / bin / elf 或者 .c 源码拖进去就烧。免装 Python，编译器也一并打包在里面。</p>
       <div class="tags"><span class="tag t-swd">SWD</span><span class="tag t-jtag">串口 ISP</span><span class="tag t-neutral">内置 arm-gcc</span><span class="tag t-spi">多文件工程</span></div>
@@ -283,7 +314,7 @@ footer a{color:var(--ink3)}
         <li><span class="k">大小</span><span class="v">63 MB 单文件 exe，首次启动解压工具链约 5 秒</span></li>
       </ul>
       <div class="actions">
-        <a class="btn" href="https://github.com/conm599/rp2040-prog/releases/latest/download/Flasher.exe">下载 exe</a>
+        <button class="btn" id="dlOpen">下载 exe <span class="sz">63 MB</span></button>
         <a class="btn ghost" href="https://github.com/conm599/rp2040-prog/releases/latest/download/flasher-src.zip">源码</a>
       </div>
     </div>
@@ -583,5 +614,126 @@ footer a{color:var(--ink3)}
 </footer>
 
 </div>
+
+<div class="dl-mask" id="dlMask">
+  <div class="dl-box" role="dialog" aria-modal="true" aria-labelledby="dlTitle">
+    <button class="dl-x" id="dlClose" aria-label="关闭">×</button>
+    <h3 id="dlTitle">选一个下载源</h3>
+    <p class="dl-sub">GitHub 直连在国内经常下不动，下面几个是公共的 GitHub 透明代理，文件内容和官方 release 上完全一样，任意挑一个能下的就行。进面板会自动测一遍延迟，数字小的优先。</p>
+    <ul class="dl-list" id="dlList"></ul>
+    <p class="dl-foot">
+      代理是第三方公益服务，随时可能失效；全都不通就用直连或者自备网络环境。
+      <button id="dlRetest">重新测速</button>
+    </p>
+  </div>
+</div>
+
+<script>
+(function(){
+  var GH = 'https://github.com/conm599/rp2040-prog/releases/latest/download/Flasher.exe';
+
+  // 2026-11 实测可用的公共透明代理，前缀 + 原始 GitHub 链接即可
+  var MIRRORS = [
+    { name: 'gh-proxy.com',  note: '稳，多线路',  pre: 'https://gh-proxy.com/'  },
+    { name: 'ghfast.top',    note: '快',          pre: 'https://ghfast.top/'    },
+    { name: 'gh.monlor.com', note: '带宽大',      pre: 'https://gh.monlor.com/' },
+    { name: 'ghproxy.net',   note: '备用',        pre: 'https://ghproxy.net/'   },
+    { name: 'GitHub 直连',   note: '原速，可能超时', pre: ''                     }
+  ];
+
+  var mask = document.getElementById('dlMask');
+  var list = document.getElementById('dlList');
+  var btnOpen = document.getElementById('dlOpen');
+  var btnClose = document.getElementById('dlClose');
+  var btnRetest = document.getElementById('dlRetest');
+
+  function urlOf(m){ return m.pre ? m.pre + GH : GH; }
+
+  function row(m, i){
+    var u = urlOf(m);
+    var li = document.createElement('li');
+    li.className = 'dl-item';
+    li.innerHTML =
+      '<span class="nm">' + m.name + '<em>' + m.note + '</em></span>' +
+      '<span class="ms" data-i="' + i + '">待测</span>' +
+      '<button class="cp" title="复制链接">复制</button>' +
+      '<a class="go" href="' + u + '" target="_blank" rel="noopener">下载</a>';
+    li.querySelector('.cp').onclick = function(){
+      var t = this;
+      var done = function(){ t.textContent = '已复制'; setTimeout(function(){ t.textContent = '复制'; }, 1400); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(u).then(done, done);
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = u; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } catch(e) {}
+        document.body.removeChild(ta);
+      }
+    };
+    return li;
+  }
+
+  // no-cors 只为测通不通：拿不到响应内容，但首包到了 promise 就 resolve
+  function probe(u, timeout){
+    return new Promise(function(resolve){
+      var ctl = new AbortController();
+      var timer = setTimeout(function(){ try{ ctl.abort(); }catch(e){} resolve(null); }, timeout || 6000);
+      var t0 = performance.now();
+      fetch(u, { mode:'no-cors', cache:'no-store', signal: ctl.signal })
+        .then(function(){
+          var ms = Math.round(performance.now() - t0);
+          clearTimeout(timer);
+          try { ctl.abort(); } catch(e) {}
+          resolve(ms);
+        })
+        .catch(function(){ clearTimeout(timer); resolve(null); });
+    });
+  }
+
+  function paint(i, ms){
+    var el = list.querySelector('.ms[data-i="' + i + '"]');
+    if (!el) return;
+    if (ms === null) { el.textContent = '不通'; el.className = 'ms dead'; return; }
+    el.textContent = ms + ' ms';
+    el.className = 'ms' + (ms < 1200 ? ' fast' : '');
+  }
+
+  function runProbe(){
+    MIRRORS.forEach(function(m, i){
+      var el = list.querySelector('.ms[data-i="' + i + '"]');
+      if (el) { el.textContent = '测速中'; el.className = 'ms'; }
+      probe(urlOf(m)).then(function(ms){ paint(i, ms); });
+    });
+  }
+
+  function build(){
+    list.innerHTML = '';
+    MIRRORS.forEach(function(m, i){ list.appendChild(row(m, i)); });
+    runProbe();
+  }
+
+  function open(){
+    if (!list.children.length) build();
+    mask.classList.add('on');
+    document.body.style.overflow = 'hidden';
+  }
+  function close(){
+    mask.classList.remove('on');
+    document.body.style.overflow = '';
+  }
+
+  btnOpen.onclick = open;
+  btnClose.onclick = close;
+  mask.addEventListener('click', function(e){ if (e.target === mask) close(); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') close(); });
+  if (btnRetest) btnRetest.onclick = runProbe;
+
+  // 从别处的 #flasher 链接进来，顺手把面板打开
+  if (location.hash === '#flasher') setTimeout(open, 300);
+  window.addEventListener('hashchange', function(){
+    if (location.hash === '#flasher') open();
+  });
+})();
+</script>
 </body>
 </html>

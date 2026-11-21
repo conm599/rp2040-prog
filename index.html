@@ -258,7 +258,7 @@ footer a{color:var(--ink3)}
 
     <div class="card">
       <h3>Agent Skill 包<span class="ver">mcu-probe-toolkit</span></h3>
-      <p class="desc">把这一整套东西固化成 AI 能直接读的上下文：八个固件的用途与 VID:PID、SWD 接线铁律、STM32 兼容片 128KB / 1KB 页的烧录参数、串口 ISP 的四个必错点。装好后新开对话不用再从头解释这是什么。</p>
+      <p class="desc">把「怎么用 RP2040 烧片子」这件事写成 AI 可执行的流程：按目标芯片选固件、按协议接线、先读再写、失败分层排查。不是记录某台机器的情况，是通用能力——换一块板子、换一种芯片，照同样几步走。</p>
       <div class="tags"><span class="tag t-swd">Skill</span><span class="tag t-neutral">pyOCD</span><span class="tag t-jtag">排错表</span><span class="tag t-spi">脚本</span></div>
       <ul class="specs">
         <li><span class="k">内容</span><span class="v">SKILL.md + 3 份参考 + 3 个脚本（探测 / 烧录 / 生成闪灯固件）</span></li>
@@ -507,20 +507,20 @@ footer a{color:var(--ink3)}
 <section id="skill">
   <h2><span class="n">06</span>Agent Skill 包</h2>
   <p class="sub">
-    这一页的知识点如果每次对话都要重讲一遍，很烦。所以打包成了一个 <b>Agent Skill</b>——
+    把这一页背后的方法整理成了一个 <b>Agent Skill</b>——
     就是 Anthropic 那套 <code style="font-family:var(--mono);font-size:12.5px">SKILL.md</code> 规范，
     不是某个客户端专有的东西，Claude Code、WorkBuddy 这类支持该格式的工具都能直接读。
-    装好之后新开对话，AI 就知道「这块板子是什么、烧哪个固件、接线怎么接、烧失败了怎么查」。
+    装好之后遇到同类问题不用从零推理：选哪个固件、线怎么接、先读还是先写、烧不进去怎么分层查，都有现成的判定路径。
   </p>
 
   <div class="card" style="margin-bottom:18px">
     <h3>mcu-probe-toolkit<span class="ver">15 KB</span></h3>
     <p class="desc">
-      不是给人看的文档，是给 AI 读的上下文。写成了「环境基线 + 铁律 + 工作流 + 排错表」的结构，
-      加载后不需要再问「你用什么下载器」「芯片什么型号」。
+      不是给人看的文档，是给 AI 执行的操作说明。写成「能力范围 → 触发场景 → 工作方式五步 → 默认参数 → 关键判据」的结构，
+      讲的是方法，不是某台机器的情况：换一块板子、换一种芯片，照同样几步走。
     </p>
     <ul class="specs">
-      <li><span class="k">SKILL.md</span><span class="v">环境基线（探针 VID:PID、芯片 128KB / 1KB 页、CH340 已烧坏）、三条铁律、标准工作流、判断芯片死活的正确标准</span></li>
+      <li><span class="k">SKILL.md</span><span class="v">能力范围、触发场景、工作方式五步、默认参数假设、芯片死活判据、三条铁律</span></li>
       <li><span class="k">references/firmware-matrix</span><span class="v">八个固件的用途、VID:PID、接线差异、实测记录，以及为什么 Pico 2 那个固件装不进 RP2040</span></li>
       <li><span class="k">references/stm32f103-troubleshooting</span><span class="v">串口 ISP 的四个必错点、通用排查顺序、兼容片判别表、全 FF 与全 00 的区别</span></li>
       <li><span class="k">references/rp2040-uf2</span><span class="v">UF2 块结构、family ID 表、bin→uf2 转换、MioLink 自编译踩过的坑</span></li>

@@ -24,13 +24,20 @@
 ## 网站结构
 
 ```
-index.html          主页面，固件下载 + 接线说明 + 实测记录
+index.html          主页面，固件下载 + 接线说明 + 实测记录 + AI 技能包
 firmware/*.uf2      8 个固件
 fixpro/             FiXPro 网页烧录界面（已汉化，含原版 index.en.html）
 fixpro/translate_fixpro.py  汉化脚本
+skill/mcu-probe-toolkit.zip WorkBuddy 技能包，解压到 ~/.workbuddy/skills/
 ```
 
 纯静态，无构建步骤。`fixpro/` 里的界面用浏览器 Web Serial 直连串口，必须 Chrome / Edge / Opera。
+
+## AI 技能包
+
+`skill/mcu-probe-toolkit.zip` 是把这一整套知识固化成 AI 可读上下文的 WorkBuddy Skill：环境基线、三条铁律、标准工作流、排错表，外加三个已在真机跑通的脚本（`probe.py` 读芯片、`flash.py` 按 128KB+1KB 页烧录、`blink.py` 现场汇编闪灯固件）。
+
+解压到 `~/.workbuddy/skills/` 后重开对话即生效，新对话不用再解释「这块板子是什么」。脚本依赖 `pip install pyocd keystone-engine`。
 
 ## 刷入方法
 

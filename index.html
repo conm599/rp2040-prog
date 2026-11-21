@@ -122,6 +122,7 @@ footer a{color:var(--ink3)}
     <div class="stat"><b>8</b><span>可直接下载的固件</span></div>
     <div class="stat"><b>6</b><span>覆盖的调试协议</span></div>
     <div class="stat"><b>10</b><span>开源工具链仓库</span></div>
+    <div class="stat"><b>1</b><span>AI 技能包</span></div>
   </div>
 </header>
 
@@ -252,6 +253,21 @@ footer a{color:var(--ink3)}
       <div class="actions">
         <a class="btn" href="firmware/MioLink_v1.0_rp2040.uf2" download>下载 <span class="sz">979 KB</span></a>
         <a class="btn ghost" href="https://github.com/JTAGNexus/MioLink" target="_blank" rel="noopener">源码</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>AI 技能包<span class="ver">Skill</span></h3>
+      <p class="desc">把这一整套东西固化成 AI 能直接读的上下文：八个固件的用途与 VID:PID、SWD 接线铁律、STM32 兼容片 128KB / 1KB 页的烧录参数、串口 ISP 的四个必错点。装进 WorkBuddy 之后，新开对话不用再从头解释这是什么。</p>
+      <div class="tags"><span class="tag t-swd">Skill</span><span class="tag t-neutral">pyOCD</span><span class="tag t-jtag">排错表</span><span class="tag t-spi">脚本</span></div>
+      <ul class="specs">
+        <li><span class="k">内容</span><span class="v">SKILL.md + 3 份参考 + 3 个脚本（探测 / 烧录 / 生成闪灯固件）</span></li>
+        <li><span class="k">安装</span><span class="v">解压到 ~/.workbuddy/skills/ 目录</span></li>
+        <li><span class="k">大小</span><span class="v">15 KB</span></li>
+      </ul>
+      <div class="actions">
+        <a class="btn" href="skill/mcu-probe-toolkit.zip" download>下载 <span class="sz">15 KB</span></a>
+        <a class="btn ghost" href="#skill">安装说明</a>
       </div>
     </div>
 
@@ -485,6 +501,50 @@ footer a{color:var(--ink3)}
     debugprobe / DapperMime / yapicoprobe 都是 <b>GP2→SWCLK、GP3→SWDIO</b>；
     pico_rvd 走 CH32 的单线 SWIO，用的是 <b>GP4</b>，还要加 1kΩ 上拉；
     FiXPro 的 SPI / I2C / UPDI 分散在 GP16–GP21。换了固件，接线就得跟着换。
+  </div>
+</section>
+
+<section id="skill">
+  <h2><span class="n">06</span>AI 技能包</h2>
+  <p class="sub">
+    这一页的知识点如果每次对话都要重讲一遍，很烦。所以打包成了一个 WorkBuddy Skill：
+    新开对话时 AI 会自动加载，直接知道「这块板子是什么、烧哪个固件、接线怎么接、烧失败了怎么查」。
+  </p>
+
+  <div class="card" style="margin-bottom:18px">
+    <h3>mcu-probe-toolkit<span class="ver">15 KB</span></h3>
+    <p class="desc">
+      不是给人看的文档，是给 AI 读的上下文。写成了「环境基线 + 铁律 + 工作流 + 排错表」的结构，
+      加载后不需要再问「你用什么下载器」「芯片什么型号」。
+    </p>
+    <ul class="specs">
+      <li><span class="k">SKILL.md</span><span class="v">环境基线（探针 VID:PID、芯片 128KB / 1KB 页、CH340 已烧坏）、三条铁律、标准工作流、判断芯片死活的正确标准</span></li>
+      <li><span class="k">references/firmware-matrix</span><span class="v">八个固件的用途、VID:PID、接线差异、实测记录，以及为什么 Pico 2 那个固件装不进 RP2040</span></li>
+      <li><span class="k">references/stm32f103-troubleshooting</span><span class="v">串口 ISP 的四个必错点、通用排查顺序、兼容片判别表、全 FF 与全 00 的区别</span></li>
+      <li><span class="k">references/rp2040-uf2</span><span class="v">UF2 块结构、family ID 表、bin→uf2 转换、MioLink 自编译踩过的坑</span></li>
+      <li><span class="k">scripts/probe.py</span><span class="v">读 DPIDR / CPUID / DBGMCU / Flash 容量 / UID，判断芯片死活</span></li>
+      <li><span class="k">scripts/flash.py</span><span class="v">按 128KB + 1KB 页烧 hex 或 bin，自动全片擦除并回读校验</span></li>
+      <li><span class="k">scripts/blink.py</span><span class="v">现场汇编出一个最小闪灯固件，用来验证链路</span></li>
+    </ul>
+    <div class="actions">
+      <a class="btn" href="skill/mcu-probe-toolkit.zip" download>下载 zip <span class="sz">15 KB</span></a>
+    </div>
+  </div>
+
+  <div class="note" style="border-left-color:var(--blue);background:var(--blue-bg);color:#0c447c">
+    <strong style="color:var(--blue)">安装方式</strong><br>
+    解压后把 <code style="font-family:var(--mono);font-size:12.5px">mcu-probe-toolkit</code> 整个文件夹放进
+    <code style="font-family:var(--mono);font-size:12.5px">~/.workbuddy/skills/</code>
+    （Windows 是 <code style="font-family:var(--mono);font-size:12.5px">C:\Users\&lt;用户名&gt;\.workbuddy\skills\</code>），
+    重开对话即生效。目录结构必须是 <code style="font-family:var(--mono);font-size:12.5px">skills/mcu-probe-toolkit/SKILL.md</code>，
+    不要多套一层文件夹。
+  </div>
+
+  <div class="note">
+    <strong>脚本依赖</strong><br>
+    <code style="font-family:var(--mono);font-size:12.5px">pip install pyocd keystone-engine</code>，再接一个 CMSIS-DAP 探针。
+    三个脚本都在真机上跑通过：探测脚本读出了 <code style="font-family:var(--mono);font-size:12.5px">DPIDR 0x1BA01477 / Flash 128KB / UID 全 0</code>，
+    烧录脚本在 128KB 兼容片上全片擦除 + 写入 + 校验一次通过。
   </div>
 </section>
 
